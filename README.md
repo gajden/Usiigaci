@@ -1,4 +1,4 @@
-# Usiigaci: Label-free instance-aware cell tracking in phase contrast microscopy enabled by machine learning
+# Usiigaci: Instance-aware cell tracking in stain-free phase contrast microscopy enabled by machine learning
 **Hsieh-Fu Tsai<sup>1,2</sup>, Joanna Gajda<sup>3</sup>, Tyler F.W. Sloan<sup>4</sup>, Andrei Rares<sup>5</sup>, and Amy Q. Shen<sup>1</sup>**
 
 <sup><sup>1</sup>Micro/Bio/Nanofluidics Unit, Okinawa Institute of Science and Technology Graduate University, Okinawa Japan</sup>
@@ -22,7 +22,7 @@ Phase contrast microscopy images are notoriously difficult to segment by convent
 
 We report Usiigaci, a semi-automated pipeline to segment, track, and visualize cell migration in phase contrast microscopy.
 
-High accuracy label-free instance-aware segmentation is achieved by adapting the mask regional convolutional neural network (Mask R-CNN), winner of Marr prize at ICCV 2017 by He *et al.*. We built Usiigaci's segmentation module based on the Mask R-CNN implementation by [Matterport](https://github.com/matterport/Mask_RCNN). Using 50 manually-annotated cell images for training, the trained Mask R-CNN neural network can generate high accuracy whole cell segmentation masks that allow us to analyze both cell migration and cell morphology which are difficult even by fluorescent imaging. 
+High accuracy instance-aware segmentation is achieved by adapting the mask regional convolutional neural network (Mask R-CNN), winner of Marr prize at ICCV 2017 by He *et al.*. We built Usiigaci's segmentation module based on the Mask R-CNN implementation by [Matterport](https://github.com/matterport/Mask_RCNN). Using 50 manually-annotated cell images for training, the trained Mask R-CNN neural network can generate high accuracy whole cell segmentation masks that allow us to analyze both cell migration and cell morphology which are difficult even by fluorescent imaging. 
 
 Cell tracking and data verification can be done in ImageJ, other existin tracking software such as [Lineage Mapper](https://github.com/usnistgov/Lineage-Mapper), or Usiigaci tracker that we developed based on open-source [trackpy](https://soft-matter.github.io/trackpy/v0.3.2/) library. A GUI is also developed to allow manual data verification to check tracking results and delete bad results.  
 
@@ -58,10 +58,13 @@ A Jupyter Notebook and the corresponding python script are developed for automat
 
 We worked on Usiigaci for our work on cell electrotaxis study, and hopefully can devote to current international effort to standardize cell migration experiments. 
 
-We hope Usiigaci is interesting to you and if it is useful for your research, please cite the following paper.
+We hope Usiigaci is interesting to you and if it is useful for your research, please cite our paper.
 ```
-Hsieh-Fu Tsai, Joanna Gajda, Tyler F.W. Sloan, Andrei Rares, and Amy Q. Shen, submitted
+Hsieh-Fu Tsai, Joanna Gajda, Tyler F.W. Sloan, Andrei Rares, and Amy Q. Shen, SoftwareX, 9, 230-237, 2019
 ```
+Accessible [here](http://dx.doi.org/10.1016/j.softx.2019.02.007)
+We had prepared a preprint deposited on BioRxiv if you want to read more on the details of Usiigaci.
+[Preprint](https://www.biorxiv.org/content/early/2019/01/18/524041)
 
 
 Usiigaci is released under MIT License. 
@@ -111,6 +114,7 @@ PyQtGraph is released under MIT license
 
 
 ## Future work
+- [ ] Add a function to find best model weight
 - [ ] pretrain model weights for DIC microscopy.
 - [ ] Multiclass segmentation to realize identification of mitotic cells.
 - [ ] Multiclass segmentation to realize label-free co-cultured cell segmentation.
@@ -127,6 +131,8 @@ But Usiigaci has been verified working on the following machines.
 1. Windows 10 64 bit on Alienware 15 with GTX 1070 8GB
 2. Linux 64 bit on Alienware 15 with GTX1070 8GB or with a GTX 1080Ti 11GB in an Alienware graphics amplifier
 3. Windows 7 64 bit on Dell Precision Workstation T7810 with Quadro M4000
+4. Ubuntu 16.04 on Dell Precision Workstation T7810 with Quadro M4000
+
 
 We see a high efficiency on running Usiigaci in a linux machine.
 
@@ -134,10 +140,12 @@ We see a high efficiency on running Usiigaci in a linux machine.
 #### our working linux setup
 * Kubuntu 16.04 Linux
 * NVIDIA graphics card with compute capability > 5.0
-* CUDA 9.1
-* TensorFlow 1.4
-* Keras 2.1.2
+* CUDA ~~9.1~~ 9.0
+* TensorFlow ~~1.4~~ 1.7 with GPU
+* Keras ~~2.1.2~~ 2.1.5
 * Anaconda with Python 3.6 
+
+note: multiple GPU not working
 
 #### our working windows setup
 * Windows 10 64bit
@@ -149,6 +157,128 @@ We see a high efficiency on running Usiigaci in a linux machine.
 * Keras 2.1.6 
 
 The exact version of CUDA and Keras is required to work with the Matterport Mask R-CNN repo.
+#### setup tutorial on an Ubuntu linux 16.04 LTS from scratch. (update 20190220)
+##### installation of Ubuntu 16.04 LTS
+download the Ubuntu 16.04 and do not upgrade to 18.04
+
+##### installation of cuda
+note: don't worry about getting the up-to-date graphics driver prior than cuda.
+the driver will be installed when cuda is installed.
+
+1. preinstall actions
+	* verify cuda-capable gpu
+	```
+	lspci | grep -i nvidia
+	```
+	* verfiy a supported version of linux
+	```
+	uname -m && cat /etc/*-release
+	```
+	* verify the system has gcc installed 
+	```
+	gcc --version
+	```
+2. disable nouveau
+	```
+	lsmod | grep nouveau
+	```
+
+	if prints anything, means neouveau is loaded and must be disabled before proceeding to install cuda
+
+	navigate to /etc/modprobe.d/
+
+	```
+	sudo nano ./blacklist.nouveau.conf
+	```
+
+	enter the following in the file
+
+	```
+	blacklist nouveau
+	options nouveau modeset=0
+	```
+
+	save
+	regenerate the kernel initrd by the command
+
+	```
+	sudo update-initramfs -u
+	```
+
+3. download cuda 9 deb from nvidia
+	9.0 local deb
+
+	navigate to download folder
+	```
+	sudo dpkg -i cuda-repo-ubuntu1604-9-0-local_9.0.176-1_amd64.deb
+	```
+	installation of public gpg key
+	```
+	sudo apt-key add /var/cuda/repo-9-0-local/7fa2af80.pub
+	sudo apt-get update
+	sudo apt-get install cuda
+	```
+
+4. post installation operations
+	edit bashrc file in user folder
+	add the following two lines
+	```
+	export PATH=/usr/local/cuda-9.0/bin${PATH:+:${PATH}}
+	export LD_LIBRARY_PATH=/usr/local/cuda-9.0/lib64\${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+	``` 
+
+5. installation of cudnn
+	it is necessary to install cudnn of the right version otherwise the tensorflow will have error
+	download from nvidia
+	libcudnn7_7.0.5_15 for cuda 9.0 runtime library as well as developer library
+
+	navigate to download folder
+
+	```
+	sudo dpkg -i libcudnn7_7.0.5.15-1+cuda9.0_amd64.deb
+	sudo dpkg -i libcudnn7-dev_7.0.5.15-1+cuda9.0_amd64.deb
+	```
+
+##### installation tensorflow
+1. installation python 3 and virtualenv
+	```
+	sudo apt update
+	sudo apt install python3-dev python3-pip python3-tk
+	sudo pip3 install -U virtualenv
+	```
+
+2. installation of tensorflow
+	create a virtual environment, let it be tensorflow or anything you want to name after.
+	```
+	virtualenv --system-site-packages -p python3 tensorflow
+	```
+	afterward enter the virtual environment tensorflow
+	```
+	source tensorflow/bin/activate
+	```
+
+	```
+	pip install --upgrade pip
+	pip install tensorflow-gpu==1.7
+	```
+	exit bash and restart
+	test tensorflow installation
+	```
+	source tensorflow/bin/activate
+	python
+	import tensorflow as tf
+	```
+	there should be no error 
+
+##### installation of other dependencies for usiigaci
+```
+source tensorflow/bin/activate
+pip install opencv-python tqdm docopt imgaug h5py
+pip install keras==2.1.5
+```
+
+*voila* there you should have a working environment for usiigaci on the linux 
+try it out with the inference script
 
 
 ### Python tracking GUI
@@ -190,9 +320,8 @@ The exact version of CUDA and Keras is required to work with the Matterport Mask
 	Note: These are trained for phase contrast images on Nikon Ti-E with 10X phase contrast objective, 1.5X intermediate magnification with a Hamamatsu Orca Flash V4.0 sCMOS camera at 1024x1022 size. We have found Mask R-CNN to be more resilient to environmental changes, but if the results from pretrained weights are suboptimal, you can see the last section to train the network with your own data.
 
 
+	The inference script "/Mask R-CNN/Inference.py" is the script you need to run on images for generating corresponding masks. 
 
-
-The inference script "/Mask R-CNN/Inference.py" is the script you need to run on images for generating corresponding masks. 
 1. (organize you image data)
 
 	assuming you're using NIS element, you can export the images by xy, t, and c if you have one.
@@ -237,9 +366,23 @@ A python tracking software is developed based on the [trackpy](https://soft-matt
 The tracker is the work by Dr. Andrei Rares. 
 
 ##### Prerequisite:
-1. modify the Imageitem class of PyQtGraph
-overwrite the ImageItem.py into python/site-packages/pyqtgraph/graphicsItems folder
+1. install required packages
+	```
+	pip install pyqt5 trackpy pims pandas trackpy pillow imageio--ffmpeg
+	```
 
+	some times pillow nees to be upgraded 
+	```
+	pip install --upgrade pillow
+	```
+
+2. modify the Imageitem class of PyQtGraph
+	overwrite the ImageItem.py into python/site-packages/pyqtgraph/graphicsItems folder
+
+	If working in the virtual environment *tensorflow*:
+	it will be under /home/username/tensorflow/lib/python3.5/site-packages/pyqtgraph/graphicitems/
+
+3. if needed you can chage the suffix for the mask folder and the pixel scale in the params settings around line 342 in cell_main.py
 
 ##### Using the Usiigaci tracker:
 
@@ -255,7 +398,14 @@ overwrite the ImageItem.py into python/site-packages/pyqtgraph/graphicsItems fol
 	Upon finish of tracking, numbered ids and cell track list will be updated. 
 
 
-2. open the folder to the cell microscopy images. The tracker will load the segmented masks by looking at mask folder name with maskfolder usffix
+2. open the folder to the cell microscopy images. 
+
+	The tracker will load the segmented masks by looking for mask folder name with the name of the cell microscopy name + mask folder suffix
+
+	remember to check the suffix is correct or not. If the suffix is incorrect, the tracker failed to find the mask, it will terminate. the suffix differs depend if you have averaging turned on or not. 
+
+	adjust the pixel scale if necessary also
+
 3. Run cell tracking and the cell tracking will be done on using the mask generated from Mask R-CNN. 
 
 	The tracking results that are suboptimal from segmentation error were repaired. 
@@ -291,9 +441,33 @@ One needs to make sure the data outputed from each tracking software is already 
 4. Usiigaci tracker tracked data
 
 	tracks.csv files are generated from the tracker. 
-	One can specify one file, or in the folder mode, the script will looks for all nested folders each containing a tracks.csv file and automated data analysis will be carried out on all the tracks.csv files. 
+	One can specify one file, or in the folder mode, the script will looks for all nested folders each containing a tracks.csv file and automated data analysis will be carried out on all the tracks.csv files. This will enable user to easily process large amount of data for cell analysis.
+
 	
 of all, since Lineage mapper and Metamorph only provide cell centroids data, the parameters regarding cell area, perimeter and orientation cannot be analyzed (despite error the analysis should still be done, just lack of data during data analysis and visualization in the notebook)
+
+#### Using the data analysis script
+1. install dependencies
+	```
+	pip install ipython numpy pandas scipy matplotlib seaborn imageio read_roi
+	```
+
+
+2. navigate to Usiigaci-master/DataAnalysis
+	edit the Data_analysis_script.py
+	or 
+	launch jupyter notebook in the folder and open the data_analysis ipynb
+
+3. edit the experimental details in the dataanalysis script
+	* line 52 : number of frames
+	* line 54 : time interval of the time lapse
+	* line 58 : the folder path to your data
+	* line 60 : what kind of data your are processing, single csv file, or multiple tracks.csv in nested folders. (note right now only usiigaci is supported)
+	* line 62 : what kind of the data? from imageJ, metamorph, or usiigaci tracker.
+
+4. note the folder path definition under windows and under linux is slightly different.
+adjust if necessary 
+
 
 ## How to make your own training data and train them.
 We manually annotate training data  (phase contrast image acquired on Nikon Ti-E microscope with 10X Ph-1 objective and 1.5X intermediate magnification on Hamamatsu Orca Flash V4.0 with 2x2 binning) using opensource software Fiji ImageJ.
